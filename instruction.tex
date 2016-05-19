@@ -1,0 +1,74 @@
+\documentclass[polish]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{a4wide}
+\usepackage{color}
+\usepackage{latexsym}
+\usepackage[dvips]{graphicx}
+\usepackage[dvips]{epsfig}
+\usepackage{url}
+
+\definecolor{uxgray}{gray}{0.75}
+\newcommand{\uxcmd}[1]{\colorbox{uxgray}{\scalebox{0.6}[0.9]{\texttt{#1}}}}
+\newcommand{\ipbox}[0]{\_\_\_.\_\_\_.\_\_\_.\_\_\_}
+\newcommand{\tleft}[1]{
+\begin{flushleft} 
+#1
+\end{flushleft}
+}
+
+\newenvironment {titemize}{\begin{itemize} \setlength{\itemsep}{-\parsep} } {\end{itemize}} 
+
+\title{\textbf{Instrukcja do ćwiczenia}\\ mhVTL i BareOS}
+\author{Piotr Kala \and Jacek Kowalski}
+\begin{document}
+\maketitle
+
+\begin{tabular}{|l|p{.7\textwidth}|}
+\hline
+Data wykonania & \\
+\hline
+Skład grupy & \\
+\hline
+Ocena & \\
+\hline
+\end{tabular}
+
+\vspace{0.5cm}
+
+\renewcommand{\labelenumi}{$\Box$\texttt{\theenumi}}
+\renewcommand{\labelenumii}{$\Box$\texttt{\theenumii}}
+
+\subsection*{Środowisko}
+
+W skład stanowiska wchodzą dwa komputery, na których uruchomione są
+trzy maszyny wirtualne z systemem CentOS w wersji 6 lub 7:
+
+\begin{itemize}
+\item Komputer 1 - mhVTL oraz BareOS director
+\item Komputer 2 - BareOS client
+\end{itemize}
+
+\subsection*{Instalacja mhVTL}
+
+\begin{enumerate}
+\item Punkt 1
+\item Punkt 2
+\end{enumerate}
+
+\subsection*{Instalacja BareOS director}
+
+\begin{enumerate}
+\item Punkt 1
+\item Punkt 2
+\end{enumerate}
+
+\subsection*{Instalacja BareOS client}
+
+\begin{enumerate}
+\item Punkt 1
+\item Punkt 2
+\end{enumerate}
+
+\end{document}
