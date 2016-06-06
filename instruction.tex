@@ -47,7 +47,8 @@ W skład stanowiska wchodzą dwa komputery, na których uruchomione są
 trzy maszyny wirtualne z systemem CentOS w wersji 6 lub 7:
 
 \begin{itemize}
-\item Komputer 1 - mhVTL oraz BareOS Director
+\item Komputer 1, VM 1 - mhVTL oraz BareOS Storage Daemon
+\item Komputer 1, VM 2 - BareOS Director
 \item Komputer 2 - BareOS File Daemon
 \end{itemize}
 
@@ -102,9 +103,12 @@ na którym zainstalowany został mhVTL.
 \item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}:
 \begin{verbatim}
 yum install epel-release
+- LUB -
+yum update ca-certificates
+yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
 \end{verbatim}
 
-\item Dodaj repozytorium systemu BareOS:
+\item Dodaj repozytorium systemu BareOS - w przypadku CentOS-a 7 popraw wersję w ścieżce:
 \begin{verbatim}
 curl http://download.bareos.org/bareos/release/latest/CentOS_6/bareos.repo \
  > /etc/yum.repos.d/bareos.repo
@@ -122,20 +126,13 @@ yum install bareos-storage-tape
 
 \begin{enumerate}
 
-\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}:
-\begin{verbatim}
-yum install epel-release
-\end{verbatim}
+\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}.
 
-\item Dodaj repozytorium systemu BareOS:
-\begin{verbatim}
-curl http://download.bareos.org/bareos/release/latest/CentOS_6/bareos.repo \
- > /etc/yum.repos.d/bareos.repo
-\end{verbatim}
+\item Dodaj repozytorium systemu BareOS.
 
-\item Zainstaluj paczki \texttt{bareos-director} i \texttt{bareos-database-sqlite3}:
+\item Zainstaluj paczki \texttt{bareos-director}, \texttt{bareos-bconsole} i \texttt{bareos-database-sqlite3}:
 \begin{verbatim}
-yum install bareos-director bareos-database-sqlite3
+yum install bareos-director bareos-bconsole bareos-database-sqlite3
 \end{verbatim}
 
 \end{enumerate}
@@ -145,18 +142,11 @@ yum install bareos-director bareos-database-sqlite3
 
 \begin{enumerate}
 
-\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}:
-\begin{verbatim}
-yum install epel-release
-\end{verbatim}
+\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}.
 
-\item Dodaj repozytorium systemu BareOS:
-\begin{verbatim}
-curl http://download.bareos.org/bareos/release/latest/CentOS_6/bareos.repo \
- > /etc/yum.repos.d/bareos.repo
-\end{verbatim}
+\item Dodaj repozytorium systemu BareOS.
 
-\item Zainstaluj paczkę bareos-client:
+\item Zainstaluj paczkę \texttt{bareos-client}:
 \begin{verbatim}
 yum install bareos-client
 \end{verbatim}
@@ -178,13 +168,12 @@ http://adres-VM-z-mhVTL/mhvtl-gui
 
 \item Zaloguj się używając hasła \texttt{mhvtl}
 
-\item W GUI wybierz zakładkę \texttt{Setup} i opcję \texttt{Add}.
+\item W zakładce \texttt{Console} uruchom mhVTL.
 
-\item Ustaw konfigurację \texttt{Standard} i markę \texttt{IBM}.
-
-\item Wybierz model biblioteki \texttt{03584L22}, napędu \texttt{ULT3580-TD3} i rodzaj taśm \texttt{LTO3}.
-
-\item Gdy system zapyta, zgódź się na restart usług mhvtl i w razie potrzeby wystartuj je.
+\item Upewnij się, że biblioteka taśmowa jest widoczna i dostępna:
+\begin{verbatim}
+mtx status
+\end{verbatim}
 
 \item Wezwij prowadzącego.
 
@@ -207,9 +196,18 @@ http://adres-VM-z-mhVTL/mhvtl-gui
 \item job, który będzie tworzył kopie zapasowe wybranego folderu z File Daemona (można wykorzystać \texttt{FileSet SelfTest} jako przykład).
 \end{itemize}
 
-\item Zrestartuj usługę:
+\end{enumerate}
+
+
+\subsection*{Konfiguracja BareOS File Daemon}
+
+\begin{enumerate}
+
+\item Upewnij się, że nazwa i hasło w sekcji \texttt{Director}, a także nazwa w sekcji \texttt{FileDaemon} klienta odpowiadają właściwym wpisom w konfiguracji Directora.
+
+\item Uruchom File Daemona na kliencie:
 \begin{verbatim}
-service bareos-dir restart
+service bareos-fd start
 \end{verbatim}
 
 \end{enumerate}
@@ -219,21 +217,21 @@ service bareos-dir restart
 
 \begin{enumerate}
 
-\item W pliku konfiguracjyjnym \texttt{/etc/bareos/bareos-sd.conf} dodaj ustawioną wcześniej wirtualną bibliotekę taśmową:
+\item W pliku konfiguracjyjnym \texttt{/etc/bareos/bareos-sd.conf} dodaj \textbf{jedną} z dostępnych bibliotek taśmowych, ustawiając wszystkie \textbf{powiązane z nią} napędy:
 \begin{verbatim}
 Autochanger {
   Name = Autochanger
   Device = Drive-0
   ...
   Changer Command = "/usr/lib/bareos/scripts/mtx-changer %c %o %S %a %d"
-  Changer Device = /dev/changer
+  Changer Device = /dev/sg11
 }
 
 Device {
   Name = Drive-0
   Drive Index = 0
-  Media Type = LTO3
-  Archive Device = /dev/sg0
+  Media Type = ...
+  Archive Device = /dev/nst0
   Autochanger = yes
   LabelMedia = no
   AutomaticMount = yes
@@ -250,17 +248,25 @@ Storage {
   Address = ...
   Password = ...
   Device = Autochanger
-  Media Type = LTO3
+  Media Type = ...
   Autochanger = yes
 }
 \end{verbatim}
 
 \item Popraw wcześniej utworzony job tak, by kopie zapasowe były zapisywane na taśmach w zmieniaczu (opcja \texttt{Storage =}).
 
+\item Upewnij się, że nazwa i hasło wpisane w sekcji \texttt{Director} w pliku \texttt{bareos-sd.conf} odpowiadają odpowienim wpisom w konfiguracji Directora.
+
 \item Wystartuj usługę \texttt{bareos-sd}:
 \begin{verbatim}
 service bareos-sd start
 \end{verbatim}
+
+\item W razie problemów z uruchomieniem, włącz \texttt{bareos-sd} w trybie debugowania:
+\begin{verbatim}
+bareos-sd -f
+\end{verbatim}
+Najczęstszym problemem jest występowanie pliku \texttt{/var/lib/bareos/bareos-sd.9103.pid} po nieoczekiwanym wyłączeniu \texttt{bareos-sd} w związku z błędem składniowym w konfiguracji.
 
 \item Uruchom Directora:
 \begin{verbatim}
@@ -316,7 +322,7 @@ You have messages.
     Job:          BackupClient.2016-05-25_11.45.47_06
     Storage:      "Drive-0" (/dev/st0)
     Pool:         Full
-    Media type:   LTO3
+    Media type:   LTO5
 *label
 The defined Storage resources are:
      1: File
@@ -327,8 +333,7 @@ Select Drive:
      2: ...
 1
 Enter new Volume name: Full-0001
-Select slot:
-15
+Enter slot (0 or Enter for none): 15
 Defined Pools:
      1: Full
      2: Differential
@@ -347,9 +352,16 @@ Requesting to mount Autochanger ...
   Termination:            Backup OK
 \end{verbatim}
 
-\item Usuń foldery, dla których została utworzona kopia zapasowa.
+\item Wyładuj taśmę z biblioteki taśmowej i sprawdź czy wróciła do odpowiedniego slotu komendą \texttt{mtx}:
 
-\item Przywróć dane z kopii. Sprawdź, do którego folderu zostają wgrane.
+\begin{verbatim}
+*unmount
+/ .../
+Select Drive (1-4): 1
+/ ... /
+\end{verbatim}
+
+\item Przywróć dane z kopii. Sprawdź, do którego folderu zostaną wgrane i czy Bacula samodzielnie wybierze poprawną taśmę do odzyskiwania.
 
 \begin{verbatim}
 *restore
@@ -367,9 +379,20 @@ $ done
 OK to run? (yes/mod/no): yes
 \end{verbatim}
 
-\item Zweryfikuj poprawność danych przywróconych z taśmy.
+\item Zweryfikuj poprawność przywróconych danych, porównując je z oryginałami.
 
 \item Wezwij prowadzącego.
+
+\end{enumerate}
+
+
+\section*{Zadania dodatkowe}
+
+\begin{enumerate}
+
+\item Zmień dane w backupowanym folderze, a następnie wykonaj kopię przyrostową i spróbuj przywrócić dane.
+
+\item Przywróć tylko wybrane pliki z kopii.
 
 \end{enumerate}
 

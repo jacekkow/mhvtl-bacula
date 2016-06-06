@@ -47,7 +47,8 @@ W skład stanowiska wchodzą dwa komputery, na których uruchomione są
 trzy maszyny wirtualne z systemem CentOS w wersji 6 lub 7:
 
 \begin{itemize}
-\item Komputer 1 - mhVTL oraz BareOS Director
+\item Komputer 1, VM 1 - mhVTL oraz BareOS Storage Daemon
+\item Komputer 1, VM 2 - BareOS Director
 \item Komputer 2 - BareOS File Daemon
 \end{itemize}
 
@@ -69,19 +70,17 @@ Poszczególne usługi nasłuchują na następujących portach:
 
 \begin{enumerate}
 \item Zainstaluj pakiet \texttt{git}:
+
 \item Sklonuj repozytorium ze skryptami do ćwiczenia:
 \begin{verbatim}
-git clone https://github.com/jacekkow/mhvtl-bacula
+https://github.com/jacekkow/mhvtl-bacula
 \end{verbatim}
-\item Uruchom skrypt \texttt{mhvtl.sh}:
-\begin{verbatim}
-./mhvtl-bacula/mhvtl.sh
-\end{verbatim}
-\item Po zakończeniu wykonania skryptu uruchom ponownie maszynę wirtualną:
-\item Uruchom skrypt \texttt{mhvtl\_after\_reboot.sh}:
-\begin{verbatim}
-./mhvtl-bacula/mhvtl_after_reboot.sh
-\end{verbatim}
+
+\item Uruchom skrypt \texttt{mhvtl.sh} z repozytorium.
+
+\item Po zakończeniu wykonania uruchom ponownie maszynę wirtualną.
+
+\item Uruchom skrypt \texttt{mhvtl\_after\_reboot.sh}.
 
 \end{enumerate}
 
@@ -92,11 +91,15 @@ na którym zainstalowany został mhVTL.
 
 \begin{enumerate}
 
-\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}
+\item W przypadku CentOS-a 6 doinstaluj repozytorium EPEL.
 
-\item Dodaj repozytorium systemu BareOS
+\item Dodaj repozytorium systemu BareOS - w przypadku CentOS-a 7 popraw wersję w ścieżce:
+\begin{verbatim}
+curl http://download.bareos.org/bareos/release/latest/CentOS_6/bareos.repo \
+ > /etc/yum.repos.d/bareos.repo
+\end{verbatim}
 
-\item Zainstaluj paczkę \texttt{bareos-storage-tape}
+\item Zainstaluj paczkę \texttt{bareos-storage-tape}.
 
 \end{enumerate}
 
@@ -104,11 +107,11 @@ na którym zainstalowany został mhVTL.
 
 \begin{enumerate}
 
-\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}
+\item W przypadku CentOS-a 6 doinstaluj repozytorium EPEL.
 
-\item Dodaj repozytorium systemu BareOS
+\item Dodaj repozytorium systemu BareOS.
 
-\item Zainstaluj paczki \texttt{bareos-director} i \texttt{bareos-database-sqlite3}
+\item Zainstaluj paczki \texttt{bareos-director}, \texttt{bareos-bconsole} i \texttt{bareos-database-sqlite3}.
 
 \end{enumerate}
 
@@ -116,15 +119,11 @@ na którym zainstalowany został mhVTL.
 
 \begin{enumerate}
 
-\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}
+\item W przypadku CentOS-a 6 doinstaluj repozytorium EPEL.
 
-\item Dodaj repozytorium systemu BareOS
-\begin{verbatim}
-curl http://download.bareos.org/bareos/release/latest/CentOS_6/bareos.repo \
- > /etc/yum.repos.d/bareos.repo
-\end{verbatim}
+\item Dodaj repozytorium systemu BareOS.
 
-\item Zainstaluj paczkę bareos-client
+\item Zainstaluj paczkę \texttt{bareos-client}.
 
 \end{enumerate}
 
@@ -136,22 +135,18 @@ curl http://download.bareos.org/bareos/release/latest/CentOS_6/bareos.repo \
 
 \begin{enumerate}
 
-\item W przeglądarce internetowej wejdź pod adres
+\item W przeglądarce internetowej wejdź pod adres:
 \begin{verbatim}
 http://adres-VM-z-mhVTL/mhvtl-gui
 \end{verbatim}
 
 \item Zaloguj się używając hasła \texttt{mhvtl}
 
-\item W GUI wybierz zakładkę \texttt{Setup} i opcję \texttt{Add}
+\item W zakładce \texttt{Console} uruchom mhVTL.
 
-\item Ustaw konfigurację \texttt{Standard} i markę \texttt{IBM}
+\item Upewnij się, że biblioteka taśmowa jest widoczna i dostępna używając polecenia \texttt{mtx}.
 
-\item Wybierz model biblioteki \texttt{03584L22}, napędu \texttt{ULT3580-TD3} i rodzaj taśm \texttt{LTO3}
-
-\item Gdy system zapyta, zgódź się na restart usług mhvtl i w razie potrzeby wystartuj je
-
-\item Wezwij prowadzącego
+\item Wezwij prowadzącego.
 
 \end{enumerate}
 
@@ -160,15 +155,24 @@ http://adres-VM-z-mhVTL/mhvtl-gui
 
 \begin{enumerate}
 
-\item Utwórz bazę danych SQLite3 wykonując
+\item Zainicjuj bazę danych SQLite3 dla systemu BareOS.
 
-\item Wyedytuj plik \texttt{/etc/bareos/bareos-dir.conf}, konfigurując w nim
+\item Wyedytuj plik \texttt{/etc/bareos/bareos-dir.conf}, konfigurując w nim:
 \begin{itemize}
-\item adres IP i hasło File Daemona (sekcja \texttt{Client})
-\item job, który będzie tworzył kopie zapasowe wybranego folderu z File Daemona (można wykorzystać \texttt{FileSet SelfTest} jako przykład)
+\item adres IP i hasło File Daemona (sekcja \texttt{Client}),
+\item job, który będzie tworzył kopie zapasowe wybranego folderu z File Daemona (można wykorzystać \texttt{FileSet SelfTest} jako przykład).
 \end{itemize}
 
-\item Zrestartuj usługę
+\end{enumerate}
+
+
+\subsection*{Konfiguracja BareOS File Daemon}
+
+\begin{enumerate}
+
+\item Upewnij się, że nazwa i hasło w sekcji \texttt{Director}, a także nazwa w sekcji \texttt{FileDaemon} klienta odpowiadają właściwym wpisom w konfiguracji Directora.
+
+\item Uruchom File Daemona na kliencie - usługa nazywa się \texttt{bareos-fd}.
 
 \end{enumerate}
 
@@ -177,118 +181,58 @@ http://adres-VM-z-mhVTL/mhvtl-gui
 
 \begin{enumerate}
 
-\item W pliku konfiguracjyjnym \texttt{/etc/bareos/bareos-sd.conf} dodaj ustawioną wcześniej wirtualną bibliotekę taśmową
+\item W pliku konfiguracjyjnym \texttt{/etc/bareos/bareos-sd.conf} dodaj \textbf{jedną} z dostępnych bibliotek taśmowych, ustawiając wszystkie \textbf{powiązane z nią} napędy.
 
-\item Dodaj analogiczną część (element Storage) w konfiguracji Directora (\texttt{/etc/bareos/bareos-dir.conf})
+\item Dodaj analogiczną część (element Storage) w konfiguracji Directora (\texttt{/etc/bareos/bareos-dir.conf}).
 
-\item Popraw wcześniej utworzony job tak, by kopie zapasowe były zapisywane na taśmach w zmieniaczu (opcja \texttt{Storage =})
+\item Popraw wcześniej utworzony job tak, by kopie zapasowe były zapisywane na taśmach w zmieniaczu (opcja \texttt{Storage =}).
 
-\item Wystartuj usługę \texttt{bareos-sd}
+\item Upewnij się, że nazwa i hasło wpisane w sekcji \texttt{Director} w pliku \texttt{bareos-sd.conf} odpowiadają odpowienim wpisom w konfiguracji Directora.
 
-\item Uruchom Directora
+\item Wystartuj usługę \texttt{bareos-sd}.
 
-\item Na serwerze Directora sprawdź poprawność konfiguracji zmieniacza taśm
+\item Uruchom Directora - usługa \texttt{bareos-dir}.
 
-\item Wezwij prowadzącego
+\item Na serwerze Directora sprawdź poprawność konfiguracji zmieniacza taśm używając w konsoli systemu BareOS komendy \texttt{status slots}.
+
+\item Wezwij prowadzącego.
 
 \end{enumerate}
 
-\section*{Kopie zapasowe i przywracanie}
+
+\section{Kopie zapasowe i przywracanie}
 
 \begin{enumerate}
 
-\item Wykonaj backup przyrostowy (i opcjonalnie pełny). Czas wykonania dla 500MB, 1GB, 2GB, 4GB zapisz w tabeli poniżej
+\item Przygotuj pliki, na których będzie wykonywana kopia zapasowa.
 
-Backup Przyrostowy
+\item Wykonaj backup pełny w zmieniaczu taśmowym, nazywając odpowiednio taśmę. Zapisz czas wykonania i rozmiar kopii:
 
 \begin{tabular}{|c|c|}
-  \hline 
+  \hline
   czas wykonania & rozmiar \\
   \hline
   & \\
   \hline
-  & \\
-  \hline
-  & \\
-  \hline
-  & \\
-  \hline
-\end{tabular} 
+\end{tabular}
 
-Backup Pełny
+\item Wyładuj taśmę z biblioteki taśmowej używając \texttt{bconsole} i sprawdź czy wróciła do odpowiedniego slotu komendą \texttt{mtx}.
+
+\item Zmodyfikuj pliki w backupowanym katalogu i wykonaj kopię przyrostową. Zapisz czas wykonania i rozmiar kopii:
 
 \begin{tabular}{|c|c|}
-  \hline 
+  \hline
   czas wykonania & rozmiar \\
   \hline
   & \\
   \hline
-  & \\
-  \hline
-  & \\
-  \hline
-  & \\
-  \hline
-\end{tabular} 
+\end{tabular}
 
-\item Uruchom wcześniej stworzony job, nazywając odpowiednio taśmę w zmieniaczu
-\begin{verbatim}
-*run
-A job name must be specified.
-The defined Job resources are:
-     1: BackupClient
-     2: BackupCatalog
-     3: RestoreFiles
-Select Job resource (1-3): 1
-Run Backup job
-/ ... /
-OK to run? (yes/mod/no): yes
-Job queued. JobId=5
-You have messages.
-*messages
-/ ... /
-25-May 11:45 localhost-sd JobId 1: Please mount append Volume "Full-0001" or label a new one for:
-    Job:          BackupClient.2016-05-25_11.45.47_06
-    Storage:      "Drive-0" (/dev/st0)
-    Pool:         Full
-    Media type:   LTO3
-*label
-The defined Storage resources are:
-     1: File
-     2: Autochanger
-Select Storage resource (1-2): 2
-Select Drive:
-     1: Drive 0
-     2: ...
-1
-Enter new Volume name: Full-0001
-Select slot:
-15
-Defined Pools:
-     1: Full
-     2: Differential
-     3: Incremental
-     4: Scratch
-Select the Pool (1-4): 1
-Connecting to Storage daemon Autochanger at localhost:9103 ...
-Sending label command for Volume "Full-0001" Slot 15 ...
-3304 Issuing autochanger "load slot 15, drive 0" command.
-3305 Autochanger "load slot 15, drive 0", status is OK.
-3000 OK label. VolBytes=212 Volume="Full-0001" Device="Drive-0" (/dev/st0)
-Requesting to mount Autochanger ...
-3001 OK mount requested. Device="Drive-0" (/dev/st0)
-*messages
-/ ... /
-  Termination:            Backup OK
-\end{verbatim}
+\item Przywróć dane z kopii. Sprawdź, do którego folderu zostaną wgrane i czy Bacula samodzielnie wybierze poprawną taśmę do odzyskiwania.
 
-\item Usuń foldery, dla których została utworzona kopia zapasowa
+\item Zweryfikuj poprawność przywróconych danych.
 
-\item Przywróć dane z kopii. Sprawdź, do którego folderu zostają wgrane
-
-\item Zweryfikuj poprawność danych przywróconych z taśmy
-
-\item Wezwij prowadzącego
+\item Wezwij prowadzącego.
 
 \end{enumerate}
 
