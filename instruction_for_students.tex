@@ -1,0 +1,263 @@
+\documentclass[polish]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{a4wide}
+\usepackage{color}
+\usepackage{latexsym}
+\usepackage[dvips]{graphicx}
+\usepackage[dvips]{epsfig}
+\usepackage{url}
+
+\definecolor{uxgray}{gray}{0.75}
+\newcommand{\uxcmd}[1]{\colorbox{uxgray}{\scalebox{0.6}[0.9]{\texttt{#1}}}}
+\newcommand{\ipbox}[0]{\_\_\_.\_\_\_.\_\_\_.\_\_\_}
+\newcommand{\tleft}[1]{
+\begin{flushleft}
+#1
+\end{flushleft}
+}
+
+\newenvironment {titemize}{\begin{itemize} \setlength{\itemsep}{-\parsep} } {\end{itemize}}
+
+\title{\textbf{Instrukcja do ćwiczenia}\\ mhVTL i BareOS}
+\author{Piotr Kala \and Jacek Kowalski}
+\begin{document}
+\maketitle
+
+\begin{tabular}{|l|p{.7\textwidth}|}
+\hline
+Data wykonania & \\
+\hline
+Skład grupy & \\
+\hline
+Ocena & \\
+\hline
+\end{tabular}
+
+\vspace{0.5cm}
+
+\renewcommand{\labelenumi}{$\Box$\texttt{\theenumi}}
+\renewcommand{\labelenumii}{$\Box$\texttt{\theenumii}}
+
+
+\section{Środowisko}
+
+W skład stanowiska wchodzą dwa komputery, na których uruchomione są
+trzy maszyny wirtualne z systemem CentOS w wersji 6 lub 7:
+
+\begin{itemize}
+\item Komputer 1 - mhVTL oraz BareOS Director
+\item Komputer 2 - BareOS File Daemon
+\end{itemize}
+
+
+\section{Przygotowania}
+
+Instrukcja nie obejmuje konfiguracji firewalla.
+Poszczególne usługi nasłuchują na następujących portach:
+
+\begin{itemize}
+\item mhVTL GUI --- 80,
+\item BareOS Director --- 9101,
+\item BareOS Storage Daemon --- 9102,
+\item BareOS File Daemon --- 9103.
+\end{itemize}
+
+
+\subsection*{Instalacja mhVTL}
+
+\begin{enumerate}
+\item Zainstaluj pakiet \texttt{git}:
+\item Sklonuj repozytorium ze skryptami do ćwiczenia:
+\begin{verbatim}
+git clone https://github.com/jacekkow/mhvtl-bacula
+\end{verbatim}
+\item Uruchom skrypt \texttt{mhvtl.sh}:
+\begin{verbatim}
+./mhvtl-bacula/mhvtl.sh
+\end{verbatim}
+\item Po zakończeniu wykonania skryptu uruchom ponownie maszynę wirtualną:
+\item Uruchom skrypt \texttt{mhvtl\_after\_reboot.sh}:
+\begin{verbatim}
+./mhvtl-bacula/mhvtl_after_reboot.sh
+\end{verbatim}
+
+\end{enumerate}
+
+\subsection*{Instalacja BareOS Storage Daemon}
+
+Instalacja powinna zostać wykonana na tym samym hoście,
+na którym zainstalowany został mhVTL.
+
+\begin{enumerate}
+
+\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}
+
+\item Dodaj repozytorium systemu BareOS
+
+\item Zainstaluj paczkę \texttt{bareos-storage-tape}
+
+\end{enumerate}
+
+\subsection*{Instalacja BareOS Director}
+
+\begin{enumerate}
+
+\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}
+
+\item Dodaj repozytorium systemu BareOS
+
+\item Zainstaluj paczki \texttt{bareos-director} i \texttt{bareos-database-sqlite3}
+
+\end{enumerate}
+
+\subsection*{Instalacja BareOS File Daemon}
+
+\begin{enumerate}
+
+\item W przypadku CentOS-a 6 doinstaluj paczkę \texttt{epel-release}
+
+\item Dodaj repozytorium systemu BareOS
+\begin{verbatim}
+curl http://download.bareos.org/bareos/release/latest/CentOS_6/bareos.repo \
+ > /etc/yum.repos.d/bareos.repo
+\end{verbatim}
+
+\item Zainstaluj paczkę bareos-client
+
+\end{enumerate}
+
+
+\section{Konfiguracja}
+
+
+\subsection*{Konfiguracja mhVTL}
+
+\begin{enumerate}
+
+\item W przeglądarce internetowej wejdź pod adres
+\begin{verbatim}
+http://adres-VM-z-mhVTL/mhvtl-gui
+\end{verbatim}
+
+\item Zaloguj się używając hasła \texttt{mhvtl}
+
+\item W GUI wybierz zakładkę \texttt{Setup} i opcję \texttt{Add}
+
+\item Ustaw konfigurację \texttt{Standard} i markę \texttt{IBM}
+
+\item Wybierz model biblioteki \texttt{03584L22}, napędu \texttt{ULT3580-TD3} i rodzaj taśm \texttt{LTO3}
+
+\item Gdy system zapyta, zgódź się na restart usług mhvtl i w razie potrzeby wystartuj je
+
+\item Wezwij prowadzącego
+
+\end{enumerate}
+
+
+\subsection*{Konfiguracja BareOS Director}
+
+\begin{enumerate}
+
+\item Utwórz bazę danych SQLite3 wykonując
+
+\item Wyedytuj plik \texttt{/etc/bareos/bareos-dir.conf}, konfigurując w nim
+\begin{itemize}
+\item adres IP i hasło File Daemona (sekcja \texttt{Client})
+\item job, który będzie tworzył kopie zapasowe wybranego folderu z File Daemona (można wykorzystać \texttt{FileSet SelfTest} jako przykład)
+\end{itemize}
+
+\item Zrestartuj usługę
+
+\end{enumerate}
+
+
+\subsection*{Konfiguracja BareOS Storage Daemon}
+
+\begin{enumerate}
+
+\item W pliku konfiguracjyjnym \texttt{/etc/bareos/bareos-sd.conf} dodaj ustawioną wcześniej wirtualną bibliotekę taśmową
+
+\item Dodaj analogiczną część (element Storage) w konfiguracji Directora (\texttt{/etc/bareos/bareos-dir.conf})
+
+\item Popraw wcześniej utworzony job tak, by kopie zapasowe były zapisywane na taśmach w zmieniaczu (opcja \texttt{Storage =})
+
+\item Wystartuj usługę \texttt{bareos-sd}
+
+\item Uruchom Directora
+
+\item Na serwerze Directora sprawdź poprawność konfiguracji zmieniacza taśm
+
+\item Wezwij prowadzącego
+
+\end{enumerate}
+
+\section*{Kopie zapasowe i przywracanie}
+
+\begin{enumerate}
+
+\item Wykonaj backup przyrostowy (i opcjonalnie pełny). Wyniki zapisz w tabeli poniżej
+
+\item Uruchom wcześniej stworzony job, nazywając odpowiednio taśmę w zmieniaczu
+\begin{verbatim}
+*run
+A job name must be specified.
+The defined Job resources are:
+     1: BackupClient
+     2: BackupCatalog
+     3: RestoreFiles
+Select Job resource (1-3): 1
+Run Backup job
+/ ... /
+OK to run? (yes/mod/no): yes
+Job queued. JobId=5
+You have messages.
+*messages
+/ ... /
+25-May 11:45 localhost-sd JobId 1: Please mount append Volume "Full-0001" or label a new one for:
+    Job:          BackupClient.2016-05-25_11.45.47_06
+    Storage:      "Drive-0" (/dev/st0)
+    Pool:         Full
+    Media type:   LTO3
+*label
+The defined Storage resources are:
+     1: File
+     2: Autochanger
+Select Storage resource (1-2): 2
+Select Drive:
+     1: Drive 0
+     2: ...
+1
+Enter new Volume name: Full-0001
+Select slot:
+15
+Defined Pools:
+     1: Full
+     2: Differential
+     3: Incremental
+     4: Scratch
+Select the Pool (1-4): 1
+Connecting to Storage daemon Autochanger at localhost:9103 ...
+Sending label command for Volume "Full-0001" Slot 15 ...
+3304 Issuing autochanger "load slot 15, drive 0" command.
+3305 Autochanger "load slot 15, drive 0", status is OK.
+3000 OK label. VolBytes=212 Volume="Full-0001" Device="Drive-0" (/dev/st0)
+Requesting to mount Autochanger ...
+3001 OK mount requested. Device="Drive-0" (/dev/st0)
+*messages
+/ ... /
+  Termination:            Backup OK
+\end{verbatim}
+
+\item Usuń foldery, dla których została utworzona kopia zapasowa
+
+\item Przywróć dane z kopii. Sprawdź, do którego folderu zostają wgrane
+
+\item Zweryfikuj poprawność danych przywróconych z taśmy
+
+\item Wezwij prowadzącego
+
+\end{enumerate}
+
+\end{document}
